@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LabelMatch</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080808;--s:#111;--s2:#1a1a1a;--b:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.13);--t:#f0ede8;--mu:#7a7773;--ac:#c8f542;--ac2:#42f5c8;--ac3:#f542a8;--re:#f54242;--fd:'Syne',sans-serif;--fm:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t);font-family:var(--fm);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+header{padding:32px 0 24px;border-bottom:1px solid var(--b);margin-bottom:48px}
+.hdr{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--fd);font-size:20px;font-weight:800;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px}
+.dot{width:8px;height:8px;background:var(--ac);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.ver{font-size:11px;color:var(--mu);letter-spacing:.1em}
+.hero{margin-bottom:48px}
+.hero h1{font-family:var(--fd);font-size:clamp(36px,6vw,64px);font-weight:800;line-height:1;letter-spacing:-2px;margin-bottom:16px}
+.hero h1 span{color:var(--ac)}
+.hero p{font-size:13px;color:var(--mu);line-height:1.7;max-width:460px}
+.drop{border:1px dashed var(--b2);border-radius:16px;padding:48px 32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--s);margin-bottom:32px;position:relative;overflow:hidden}
+.drop::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(200,245,66,.04) 0%,transparent 70%);pointer-events:none}
+.drop:hover,.drop.over{border-color:var(--ac);background:#111f00}
+.drop.over{border-style:solid}
+.uico{width:52px;height:52px;border:1px solid var(--b2);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;background:var(--s2)}
+.uico svg{width:22px;height:22px;stroke:var(--ac);fill:none}
+.utit{font-family:var(--fd);font-size:17px;font-weight:600;margin-bottom:6px}
+.usub{font-size:12px;color:var(--mu)}
+#fi{display:none}
+.fbar{background:var(--s);border:1px solid var(--b2);border-radius:12px;padding:16px 20px;display:none;align-items:center;gap:14px;margin-bottom:24px}
+.wv{display:flex;align-items:center;gap:2px;height:28px}
+.wb{width:3px;background:var(--ac);border-radius:2px;animation:wave 1.2s ease-in-out infinite}
+.wb:nth-child(2){animation-delay:.1s;height:70%}.wb:nth-child(3){animation-delay:.2s;height:100%}.wb:nth-child(4){animation-delay:.3s;height:55%}.wb:nth-child(5){animation-delay:.4s;height:85%}.wb:nth-child(6){animation-delay:.5s;height:45%}.wb:nth-child(7){animation-delay:.6s;height:75%}.wb:nth-child(8){animation-delay:.7s;height:60%}
+@keyframes wave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.4)}}
+.wb.p{animation:none;height:40%}
+.fi{flex:1;min-width:0}
+.fn{font-size:13px;font-weight:500;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fm2{font-size:11px;color:var(--mu);margin-top:3px}
+.rm{background:none;border:none;cursor:pointer;color:var(--mu);font-size:18px;padding:4px;transition:color .15s}
+.rm:hover{color:var(--re)}
+.grow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.gp{font-size:11px;font-family:var(--fm);font-weight:500;padding:6px 14px;border-radius:20px;border:1px solid var(--b2);background:transparent;color:var(--mu);cursor:pointer;transition:all .15s;letter-spacing:.05em}
+.gp.act{border-color:var(--ac);color:var(--ac);background:rgba(200,245,66,.07)}
+.gp:hover:not(.act){color:var(--t)}
+.err{display:none;background:rgba(245,66,66,.08);border:1px solid rgba(245,66,66,.25);border-radius:10px;padding:14px 18px;font-size:12px;color:#f08080;margin-bottom:20px}
+.err.v{display:block}
+.abtn{width:100%;padding:16px;font-family:var(--fd);font-size:15px;font-weight:700;letter-spacing:.05em;background:var(--ac);color:#080808;border:none;border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:40px}
+.abtn:hover{background:#d4f55a;transform:translateY(-1px)}
+.abtn:active{transform:translateY(0)}
+.abtn:disabled{background:var(--s2);color:var(--mu);cursor:not-allowed;transform:none}
+.ld{display:none;text-align:center;padding:48px 0}
+.ld.v{display:block}
+.sp{width:40px;height:40px;margin:0 auto 16px;border:2px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lt{font-size:12px;color:var(--mu);letter-spacing:.1em}
+.ls{font-size:11px;color:var(--mu);margin-top:8px;opacity:.6}
+.abar{display:none;flex-wrap:wrap;gap:8px;margin-bottom:32px;padding:16px 20px;background:var(--s);border:1px solid var(--b);border-radius:12px}
+.abar.v{display:flex}
+.chip{font-size:11px;font-family:var(--fm);padding:4px 10px;border-radius:6px}
+.cb{background:rgba(200,245,66,.12);color:var(--ac)}
+.ck{background:rgba(66,245,200,.12);color:var(--ac2)}
+.cg{background:rgba(245,66,168,.12);color:var(--ac3)}
+.cm{background:rgba(255,255,255,.07);color:var(--t)}
+.res{display:none}
+.res.v{display:block}
+.rh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px}
+.rt{font-family:var(--fd);font-size:13px;font-weight:600;letter-spacing:.1em;color:var(--mu);text-transform:uppercase}
+.rc{font-size:11px;color:var(--mu)}
+.lc{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:18px 20px;margin-bottom:10px;display:grid;grid-template-columns:28px 44px 1fr auto;gap:14px;align-items:center;cursor:pointer;transition:all .15s}
+.lc:hover{border-color:var(--b2);background:var(--s2)}
+.lc.t3{border-color:rgba(200,245,66,.25)}
+.lrank{font-family:var(--fm);font-size:11px;color:var(--mu);text-align:right}
+.lrank.g{color:var(--ac)}
+.lav{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:13px;font-weight:700;flex-shrink:0}
+.lb{min-width:0}
+.ln{font-family:var(--fd);font-size:15px;font-weight:600;color:var(--t);margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.bb{font-size:9px;font-family:var(--fm);font-weight:500;padding:2px 7px;border-radius:4px;letter-spacing:.08em;background:rgba(200,245,66,.15);color:var(--ac);text-transform:uppercase}
+.lm{font-size:11px;color:var(--mu)}
+.ltags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.ltag{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--s2);color:var(--mu);border:1px solid var(--b)}
+.ms{text-align:right;min-width:80px}
+.mp{font-family:var(--fd);font-size:22px;font-weight:800;line-height:1}
+.mbw{margin-top:5px}
+.mbb{height:3px;background:var(--b2);border-radius:2px;overflow:hidden}
+.mbf{height:100%;border-radius:2px;transition:width .8s ease}
+.ml{font-size:10px;color:var(--mu);margin-top:4px;text-align:right}
+.why{background:var(--s2);border-left:2px solid var(--ac);border-radius:0 8px 8px 0;padding:12px 16px;margin-top:10px;display:none;font-size:12px;color:var(--mu);line-height:1.7}
+.why.o{display:block}
+.why b{color:var(--t);font-weight:500}
+footer{border-top:1px solid var(--b);margin-top:64px;padding:24px 0;text-align:center;font-size:11px;color:var(--mu)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hdr">
+    <div class="logo"><span class="dot"></span>LABELMATCH</div>
+    <span class="ver">BETA v0.1</span>
+  </div>
+</header>
+<section class="hero">
+  <h1>Find your<br><span>perfect label.</span></h1>
+  <p>Sube tu track terminado. La IA analiza su ADN musical y lo compara contra los mejores sellos de Tech House, House y Minimal.</p>
+</section>
+<div class="drop" id="drop">
+  <div class="uico"><svg viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg></div>
+  <div class="utit">Arrastra tu track aqui</div>
+  <div class="usub">MP3, WAV, FLAC, AIFF</div>
+  <input type="file" id="fi" accept=".mp3,.wav,.flac,.aiff,.ogg,.m4a">
+</div>
+<div class="fbar" id="fbar">
+  <div class="wv" id="wv">
+    <div class="wb" style="height:50%"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div>
+  </div>
+  <div class="fi"><div class="fn" id="fn">-</div><div class="fm2" id="fm">-</div></div>
+  <button class="rm" id="rm">x</button>
+</div>
+<div class="grow" id="grow">
+  <button class="gp act" data-g="all">Todos</button>
+  <button class="gp" data-g="tech house">Tech House</button>
+  <button class="gp" data-g="house">House</button>
+  <button class="gp" data-g="minimal">Minimal</button>
+</div>
+<div class="err" id="err"></div>
+<button class="abtn" id="abtn" disabled>ANALIZAR TRACK</button>
+<div class="ld" id="ld">
+  <div class="sp"></div>
+  <div class="lt">ANALIZANDO ADN MUSICAL</div>
+  <div class="ls" id="ls">Conectando...</div>
+</div>
+<div class="abar" id="abar"></div>
+<div class="res" id="res">
+  <div class="rh"><span class="rt">Sellos recomendados</span><span class="rc" id="rc"></span></div>
+  <div id="cards"></div>
+</div>
+<footer>Powered by Claude AI &middot; LabelMatch Beta &middot; Resultados orientativos</footer>
+</div>
+<script>
+var LABELS = [
+  {name:"Repopulate Mars",sl:"RM",g:"tech house",loc:"UK",vi:"dark, driving, club",b:"128-132",ar:"Lee Foss, Mele, Skream",su:"Tech House / Bass House",co:"#1a2a1a",tc:"#c8f542"},
+  {name:"Hot Creations",sl:"HC",g:"tech house",loc:"UK",vi:"groovy, jackin, underground",b:"126-130",ar:"Jamie Jones, Lee Foss",su:"Tech House / Deep",co:"#2a1a1a",tc:"#f54242"},
+  {name:"Relief Records",sl:"RL",g:"tech house",loc:"USA",vi:"raw, industrial, club",b:"128-133",ar:"Green Velvet, Cajmere",su:"Tech House / Chicago",co:"#1a1a2a",tc:"#42f5c8"},
+  {name:"Avotre",sl:"AV",g:"tech house",loc:"UK",vi:"deep, groovy, minimal",b:"126-129",ar:"Sante, Matthias Tanzmann",su:"Tech House / Organic",co:"#251a10",tc:"#f5a542"},
+  {name:"Desolat",sl:"DS",g:"tech house",loc:"Germany",vi:"minimal, hypnotic, deep",b:"124-128",ar:"Loco Dice, Martin Buttrich",su:"Minimal Tech House",co:"#1a1a1a",tc:"#ffffff"},
+  {name:"Elrow Music",sl:"ER",g:"tech house",loc:"Spain",vi:"funky, colourful, party",b:"127-131",ar:"Elrow Artists, tINI",su:"Tech House / Funky",co:"#2a1a2a",tc:"#f542a8"},
+  {name:"Hive Audio",sl:"HA",g:"tech house",loc:"Germany",vi:"raw, underground, dark",b:"128-132",ar:"Catz N Dogz, Solomun",su:"Tech House / Techno",co:"#1a2020",tc:"#42f5c8"},
+  {name:"Trick",sl:"TR",g:"tech house",loc:"UK",vi:"deep, soulful, groovy",b:"124-128",ar:"Patrick Topping, George Fitzgerald",su:"Tech House / Deep House",co:"#1a2010",tc:"#c8f542"},
+  {name:"Cuttin Headz",sl:"CH",g:"tech house",loc:"France",vi:"funky, acid, underground",b:"127-131",ar:"DJ Haus, Armand Van Helden",su:"Tech House / Acid",co:"#201a10",tc:"#f5c842"},
+  {name:"SOLA",sl:"SO",g:"tech house",loc:"UK",vi:"melodic, festival, emotional",b:"125-129",ar:"Solardo",su:"Melodic Tech House",co:"#102020",tc:"#42f5c8"},
+  {name:"Roush Label",sl:"RO",g:"tech house",loc:"UK",vi:"dark, punchy, underground",b:"128-132",ar:"Roush, Will Clarke",su:"Tech House / Dark",co:"#1a1a1a",tc:"#f54242"},
+  {name:"Cajual Records",sl:"CA",g:"tech house",loc:"USA",vi:"Chicago, jackin, raw",b:"126-130",ar:"Cajmere, Gene Farris",su:"Chicago Tech House",co:"#1a2a10",tc:"#c8f542"},
+  {name:"VIVa MUSiC",sl:"VM",g:"tech house",loc:"UK",vi:"minimal, groovy, deep",b:"124-128",ar:"Steve Lawler, Huxley",su:"Tech House / Minimal",co:"#10201a",tc:"#42f5c8"},
+  {name:"Kaluki Musik",sl:"KM",g:"tech house",loc:"UK",vi:"driving, hard, festival",b:"129-133",ar:"Ilario Alicante, Pan-Pot",su:"Hard Tech House",co:"#200a0a",tc:"#f54242"},
+  {name:"Suara",sl:"SU",g:"tech house",loc:"Spain",vi:"hypnotic, progressive, dark",b:"127-131",ar:"Coyu, Rebolledo",su:"Tech House / Hypnotic",co:"#0a0a20",tc:"#a842f5"},
+  {name:"Snatch Records",sl:"SN",g:"tech house",loc:"UK",vi:"underground, pumping, raw",b:"128-132",ar:"Riva Starr",su:"Tech House / Underground",co:"#1a0a0a",tc:"#f542a8"},
+  {name:"DFTD",sl:"DF",g:"tech house",loc:"UK",vi:"defected, soulful tech",b:"126-130",ar:"Skream, Route 94",su:"Tech House / Defected",co:"#0a1020",tc:"#4288f5"},
+  {name:"Kompakt Extra",sl:"KE",g:"tech house",loc:"Germany",vi:"smooth, elegant, minimal",b:"124-127",ar:"Gui Boratto, The Field",su:"Minimal / Micro House",co:"#101020",tc:"#c8f542"},
+  {name:"Toolroom",sl:"TO",g:"tech house",loc:"UK",vi:"polished, peak time, commercial",b:"128-132",ar:"Mark Knight, Cristoph",su:"Tech House / Commercial",co:"#0a1a1a",tc:"#42f5c8"},
+  {name:"Saved Records",sl:"SV",g:"tech house",loc:"UK",vi:"deep, quality, underground",b:"125-129",ar:"Nic Fanciulli, Tube and Berger",su:"Deep Tech House",co:"#1a0a20",tc:"#a842f5"},
+  {name:"Do Not Sleep",sl:"DN",g:"tech house",loc:"Spain",vi:"Ibiza, festival, melodic",b:"126-130",ar:"Dennis Cruz, Betoko",su:"Tech House / Ibiza",co:"#200a10",tc:"#f542a8"},
+  {name:"Terminal M",sl:"TM",g:"tech house",loc:"Germany",vi:"hard, industrial, dark",b:"130-135",ar:"Monika Kruse, Alignment",su:"Hard Tech / Techno",co:"#0a0a0a",tc:"#f54242"},
+  {name:"Moon Harbour",sl:"MH",g:"tech house",loc:"Germany",vi:"deep, elegant, hypnotic",b:"124-128",ar:"Matthias Tanzmann, Sante",su:"Deep Tech House",co:"#0a1420",tc:"#4288f5"},
+  {name:"Hotflush",sl:"HF",g:"tech house",loc:"UK",vi:"post-dubstep, electronic, deep",b:"124-128",ar:"Scuba, Midland",su:"Electronic / Tech House",co:"#0a0a20",tc:"#a0a0f5"},
+  {name:"Pets Recordings",sl:"PE",g:"tech house",loc:"Spain",vi:"deep, balearic, quality",b:"122-128",ar:"Edu Imbernon, Los Suruba",su:"Deep Tech / Balearic",co:"#1a0a1a",tc:"#f542a8"},
+  {name:"Defected Records",sl:"DE",g:"house",loc:"UK",vi:"soulful, classic, quality",b:"122-127",ar:"Simon Dunmore, MK, Sam Divine",su:"Soulful House / Deep House",co:"#0a1a10",tc:"#c8f542"},
+  {name:"Wolf Music",sl:"WM",g:"house",loc:"UK",vi:"soulful, deep, underground",b:"120-125",ar:"Dj Haus, Medlar",su:"Deep House / Outsider",co:"#0a1020",tc:"#4288f5"},
+  {name:"Freerange Records",sl:"FR",g:"house",loc:"UK",vi:"soulful, jazzy, quality",b:"121-125",ar:"Jimpster, Rocco",su:"Deep House / Soulful",co:"#1a0a10",tc:"#f542a8"},
+  {name:"Rekids",sl:"RK",g:"house",loc:"UK",vi:"funk, groove, quality",b:"122-127",ar:"Radio Slave, Moomin",su:"Funky House / Deep",co:"#200a1a",tc:"#f542a8"},
+  {name:"Running Back",sl:"RB",g:"house",loc:"Germany",vi:"hip, quality, diverse",b:"122-127",ar:"Gerd Janson, Dj Koze",su:"House / Disco",co:"#0a200a",tc:"#42f542"},
+  {name:"Crosstown Rebels",sl:"XR",g:"house",loc:"UK",vi:"underground, deep, quality",b:"121-126",ar:"Damian Lazarus, Lee Burridge",su:"Deep / Organic House",co:"#10101a",tc:"#a842f5"},
+  {name:"Innervisions",sl:"IN",g:"house",loc:"Germany",vi:"organic, elegant, artistic",b:"120-125",ar:"Dixon, Ame, Henrik Schwarz",su:"Deep / Organic House",co:"#0a1a1a",tc:"#42f5c8"},
+  {name:"Aus Music",sl:"AU",g:"house",loc:"UK",vi:"deep, electronic, quality",b:"120-125",ar:"Will Saul, Breach",su:"Deep House / Electronic",co:"#1a1a0a",tc:"#f5f542"},
+  {name:"Large Music",sl:"LG",g:"house",loc:"UK",vi:"soulful, disco, bumpy",b:"120-124",ar:"Miguel Migs, Osunlade",su:"Soulful / Deep House",co:"#200a0a",tc:"#f54242"},
+  {name:"Moda Black",sl:"MB",g:"house",loc:"UK",vi:"dark, deep, melodic",b:"122-127",ar:"Bontan, Eli Brown",su:"Deep House / Dark",co:"#0a0a1a",tc:"#a842f5"},
+  {name:"Permanent Vacation",sl:"PV",g:"house",loc:"Germany",vi:"disco, summer, dance",b:"119-124",ar:"Various",su:"Disco House / Italo",co:"#200a0a",tc:"#f5a542"},
+  {name:"Nervous Records",sl:"NR",g:"house",loc:"USA",vi:"NY, classic, soulful",b:"120-126",ar:"Masters At Work",su:"NY House / Classic",co:"#0a1020",tc:"#4288f5"},
+  {name:"Trax Records",sl:"TX",g:"house",loc:"USA",vi:"Chicago, original, raw",b:"118-125",ar:"Frankie Knuckles, Larry Heard",su:"Chicago House / Classic",co:"#10200a",tc:"#c8f542"},
+  {name:"Shall Not Fade",sl:"SF",g:"house",loc:"UK",vi:"dance, quality, underground",b:"120-126",ar:"Kettama, Axel Boman",su:"House / Deep",co:"#0a1a10",tc:"#42f542"},
+  {name:"Bedrock Records",sl:"BD",g:"house",loc:"UK",vi:"progressive, deep, quality",b:"121-126",ar:"John Digweed, Nick Muir",su:"Progressive House",co:"#0a0a20",tc:"#4242f5"},
+  {name:"Get Physical",sl:"GP",g:"house",loc:"Germany",vi:"eclectic, quality, global",b:"120-128",ar:"M.A.N.D.Y., Booka Shade",su:"Deep House / Electronic",co:"#10101a",tc:"#a842f5"},
+  {name:"Exploited",sl:"EX",g:"house",loc:"Germany",vi:"edgy, underground, raw",b:"122-128",ar:"Shir Khan, Catz N Dogz",su:"Dirty House / Electro",co:"#200a0a",tc:"#f54242"},
+  {name:"Correspondant",sl:"CO",g:"house",loc:"France",vi:"funky, French, eclectic",b:"120-126",ar:"Job Jobse, Traumer",su:"French House / Disco",co:"#0a1020",tc:"#4288f5"},
+  {name:"Dirtybird",sl:"DB",g:"house",loc:"USA",vi:"bass, tech, fun",b:"126-131",ar:"Claude VonStroke, Ardalan",su:"Bass House / Tech",co:"#1a2010",tc:"#c8f542"},
+  {name:"Classic Music Co",sl:"CM",g:"house",loc:"UK",vi:"classic, uk house, garage",b:"120-126",ar:"DJ Gregory, Riva Starr",su:"UK House / Garage",co:"#10200a",tc:"#c8f542"},
+  {name:"NuNorthern Soul",sl:"NN",g:"house",loc:"UK",vi:"eclectic, quality, diverse",b:"110-126",ar:"Various",su:"Leftfield / Deep House",co:"#1a0a1a",tc:"#f542a8"},
+  {name:"One Records",sl:"OR",g:"house",loc:"Italy",vi:"deep, classic, quality",b:"120-125",ar:"Dj Chus, David Penn",su:"Deep / Soulful House",co:"#1a1a0a",tc:"#f5f542"},
+  {name:"Traxsource Hype",sl:"TH",g:"house",loc:"USA",vi:"underground, diverse, quality",b:"122-126",ar:"Various",su:"Deep / Afro House",co:"#1a100a",tc:"#f5a542"},
+  {name:"Minus",sl:"MN",g:"minimal",loc:"Canada",vi:"cold, precise, architectural",b:"128-135",ar:"Richie Hawtin, Gaiser",su:"Minimal Techno",co:"#0a0a0a",tc:"#ffffff"},
+  {name:"Perlon",sl:"PL",g:"minimal",loc:"Germany",vi:"quirky, abstract, Leipzig",b:"124-130",ar:"Zip, Pantytec, Dj Stingray",su:"Minimal / Abstract",co:"#100a0a",tc:"#f5a542"},
+  {name:"Spectral Sound",sl:"SS",g:"minimal",loc:"USA",vi:"deep, cerebral, subtle",b:"126-132",ar:"Ghostly artists, Dabrye",su:"Minimal / Microhouse",co:"#0a100a",tc:"#42f542"},
+  {name:"Cadenza",sl:"CZ",g:"minimal",loc:"Switzerland",vi:"elegant, latin, rhythmic",b:"126-131",ar:"Luciano, Nic Fanciulli",su:"Minimal Tech House",co:"#10100a",tc:"#f5f542"},
+  {name:"Poker Flat",sl:"PF",g:"minimal",loc:"Germany",vi:"deep, melodic, elegant",b:"124-128",ar:"Steve Bug, Langenberg",su:"Minimal / Deep House",co:"#0a0a14",tc:"#5555f5"},
+  {name:"Trapez",sl:"TP",g:"minimal",loc:"Germany",vi:"functional, underground, loop",b:"126-132",ar:"Troy Pierce, Tobi Neumann",su:"Minimal Techno",co:"#14100a",tc:"#f5a020"},
+  {name:"Dessous Recordings",sl:"DES",g:"minimal",loc:"Germany",vi:"deep, minimal, quality",b:"122-128",ar:"Steve Bug, Koze",su:"Deep Minimal House",co:"#0a1410",tc:"#20f5a0"},
+  {name:"microCastle",sl:"MC",g:"minimal",loc:"USA",vi:"organic, deep, progressive",b:"122-128",ar:"Gui Boratto, Sasha Carassi",su:"Minimal / Progressive",co:"#100a14",tc:"#c042f5"},
+  {name:"Gruuv",sl:"GR",g:"minimal",loc:"UK",vi:"deep, hypnotic, underground",b:"124-129",ar:"Nic Fanciulli, Gary Beck",su:"Minimal Tech",co:"#0a0814",tc:"#6055f5"},
+  {name:"Ideal Audio",sl:"IA",g:"minimal",loc:"UK",vi:"progressive, uplifting, quality",b:"124-128",ar:"Gary Beck, GusGus",su:"Minimal Progressive",co:"#08140a",tc:"#40f560"},
+  {name:"Leftroom",sl:"LR",g:"minimal",loc:"UK",vi:"subtle, quality, deep",b:"122-128",ar:"Matt Tolfrey, Claude VonStroke",su:"Deep Minimal",co:"#100a08",tc:"#f58040"},
+  {name:"Klockworks",sl:"KW",g:"minimal",loc:"Sweden",vi:"Swedish, cold, dark, functional",b:"130-136",ar:"Ben Klock, Len Faki",su:"Dark Minimal Techno",co:"#0a0a0a",tc:"#808080"},
+  {name:"Ostgut Ton",sl:"OT",g:"minimal",loc:"Germany",vi:"Berghain, dark, industrial",b:"130-138",ar:"Marcel Dettmann, Ben Klock",su:"Dark Minimal / Techno",co:"#060606",tc:"#e0e0e0"},
+  {name:"Items and Things",sl:"IT",g:"minimal",loc:"Canada",vi:"playful, quirky, quality",b:"122-128",ar:"Siopis, Matias Aguayo",su:"Quirky Minimal",co:"#140a0a",tc:"#f54040"},
+  {name:"No19 Music",sl:"N19",g:"minimal",loc:"UK",vi:"deep, groovy, quality",b:"122-128",ar:"Soul Clap, Wolf + Lamb",su:"Minimal / Balearic",co:"#0a140a",tc:"#40f540"},
+  {name:"Spiel-Zeug",sl:"SZ",g:"minimal",loc:"Germany",vi:"toy-like, quirky, minimal",b:"120-128",ar:"Robag Wruhme",su:"Micro House / Minimal",co:"#0a100a",tc:"#40f560"},
+  {name:"Kompakt",sl:"KP",g:"minimal",loc:"Germany",vi:"koln, classic, smooth",b:"122-128",ar:"Wolfgang Voigt, Reinhard Voigt",su:"Minimal / Microhouse",co:"#0a0a14",tc:"#6060f5"},
+  {name:"Cocoon Recordings",sl:"CC",g:"minimal",loc:"Germany",vi:"Ibiza, hypnotic, marathon",b:"128-135",ar:"Sven Vath, Butch",su:"Minimal Techno / Ibiza",co:"#1a0a0a",tc:"#f54040"},
+  {name:"Diynamic",sl:"DY",g:"minimal",loc:"Germany",vi:"Hamburg, melodic, hypnotic",b:"124-130",ar:"Solomun, Adriatique",su:"Melodic Minimal / Deep",co:"#0a101a",tc:"#4080f5"},
+  {name:"Afterlife Records",sl:"AF",g:"minimal",loc:"Germany",vi:"melodic, dark, ethereal",b:"124-130",ar:"Tale Of Us, Massano",su:"Melodic Minimal Techno",co:"#0a0a1a",tc:"#8080f5"}
+];
+
+var selFile = null;
+var activeG = "all";
+var lastRes = null;
+
+var drop = document.getElementById("drop");
+var fi = document.getElementById("fi");
+var fbar = document.getElementById("fbar");
+var fnEl = document.getElementById("fn");
+var fmEl = document.getElementById("fm");
+var rm = document.getElementById("rm");
+var abtn = document.getElementById("abtn");
+var ld = document.getElementById("ld");
+var lsEl = document.getElementById("ls");
+var abar = document.getElementById("abar");
+var res = document.getElementById("res");
+var cards = document.getElementById("cards");
+var errEl = document.getElementById("err");
+var rcEl = document.getElementById("rc");
+
+drop.addEventListener("click", function() { fi.click(); });
+fi.addEventListener("change", function(e) { if (e.target.files[0]) loadFile(e.target.files[0]); });
+drop.addEventListener("dragover", function(e) { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", function() { drop.classList.remove("over"); });
+drop.addEventListener("drop", function(e) {
+  e.preventDefault();
+  drop.classList.remove("over");
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+
+function loadFile(f) {
+  selFile = f;
+  drop.style.display = "none";
+  fbar.style.display = "flex";
+  fnEl.textContent = f.name;
+  fmEl.textContent = (f.size/1024/1024).toFixed(1) + " MB";
+  abtn.disabled = false;
+  setTimeout(function() {
+    document.querySelectorAll(".wb").forEach(function(b) { b.classList.add("p"); });
+  }, 3000);
+}
+
+rm.addEventListener("click", function() {
+  selFile = null;
+  fi.value = "";
+  drop.style.display = "";
+  fbar.style.display = "none";
+  abtn.disabled = true;
+  clearResults();
+  document.querySelectorAll(".wb").forEach(function(b) { b.classList.remove("p"); });
+});
+
+document.getElementById("grow").addEventListener("click", function(e) {
+  var pill = e.target.closest(".gp");
+  if (!pill) return;
+  activeG = pill.dataset.g;
+  document.querySelectorAll(".gp").forEach(function(p) { p.classList.toggle("act", p === pill); });
+  if (lastRes) renderResults(lastRes);
+});
+
+abtn.addEventListener("click", function() {
+  if (!selFile) return;
+  clearResults();
+  showLoading();
+  errEl.classList.remove("v");
+
+  var labelsPrompt = LABELS.map(function(l) {
+    return l.name + " (" + l.g + ", " + l.loc + "): " + l.su + ". Vibe: " + l.vi + ". BPM: " + l.b + ". Artistas: " + l.ar + ".";
+  }).join("\n");
+
+  var sysPrompt = "Eres un experto en A&R de musica electronica. Analiza el nombre del archivo de audio proporcionado y recomienda exactamente 10 sellos de la lista. Responde SOLO con JSON valido sin markdown ni backticks. Formato: {\"analysis\":{\"bpm\":\"rango\",\"key\":\"tonalidad\",\"genre\":\"genero\",\"subgenre\":\"subgenero\",\"mood\":\"mood 3-4 palabras\",\"energy\":\"low/mid/high\",\"characteristics\":[\"c1\",\"c2\",\"c3\",\"c4\"]},\"labels\":[{\"name\":\"nombre exacto del sello\",\"score\":85,\"reason\":\"por que encaja en 1-2 oraciones\",\"tips\":\"consejo para enviar el demo\"}]}. Score entre 60 y 98. Ordenar de mayor a menor score.";
+
+  var userMsg = "Archivo: " + selFile.name + ". Recomienda 10 sellos de esta lista:\n\n" + labelsPrompt;
+
+  setStep("Analizando ADN musical...");
+
+  fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2000,
+      system: sysPrompt,
+      messages: [{ role: "user", content: userMsg }]
+    })
+  })
+  .then(function(r) {
+    if (!r.ok) {
+      return r.json().then(function(e) { throw new Error(e.error && e.error.message ? e.error.message : "HTTP " + r.status); });
+    }
+    return r.json();
+  })
+  .then(function(data) {
+    setStep("Procesando resultados...");
+    var raw = data.content.map(function(c) { return c.text || ""; }).join("");
+    var clean = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+    var parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch(e) {
+      throw new Error("No se pudo procesar la respuesta. Intenta de nuevo.");
+    }
+    lastRes = parsed;
+    hideLoading();
+    showAnalysis(parsed.analysis);
+    renderResults(parsed);
+  })
+  .catch(function(e) {
+    hideLoading();
+    showErr(e.message);
+  });
+});
+
+function showLoading() { ld.classList.add("v"); abtn.disabled = true; abtn.textContent = "ANALIZANDO..."; }
+function hideLoading() { ld.classList.remove("v"); abtn.disabled = false; abtn.textContent = "ANALIZAR TRACK"; }
+function setStep(t) { lsEl.textContent = t; }
+function clearResults() { res.classList.remove("v"); abar.classList.remove("v"); abar.innerHTML = ""; cards.innerHTML = ""; }
+function showErr(msg) { errEl.textContent = "Error: " + msg; errEl.classList.add("v"); }
+
+function showAnalysis(a) {
+  if (!a) return;
+  abar.innerHTML = "";
+  var items = [
+    {c:"chip cb", t: a.bpm + " BPM"},
+    {c:"chip ck", t: a.key},
+    {c:"chip cg", t: a.genre},
+    {c:"chip cm", t: a.mood},
+    {c:"chip cm", t: a.energy + " energy"}
+  ];
+  if (a.characteristics) {
+    a.characteristics.forEach(function(ch) { items.push({c:"chip cm", t: ch}); });
+  }
+  items.forEach(function(item) {
+    var sp = document.createElement("span");
+    sp.className = item.c;
+    sp.textContent = item.t;
+    abar.appendChild(sp);
+  });
+  abar.classList.add("v");
+}
+
+function renderResults(parsed) {
+  var lbls = parsed.labels || [];
+  if (activeG !== "all") {
+    lbls = lbls.filter(function(l) {
+      var db = LABELS.find(function(d) { return d.name === l.name; });
+      return db && db.g === activeG;
+    });
+  }
+  cards.innerHTML = "";
+  rcEl.textContent = lbls.length + " resultados";
+
+  lbls.forEach(function(l, i) {
+    var db = LABELS.find(function(d) { return d.name === l.name; });
+    if (!db) db = {sl: l.name.slice(0,2).toUpperCase(), su:"", loc:"", vi:"", co:"#1a1a1a", tc:"#fff"};
+    var score = Math.min(98, Math.max(55, l.score || 75));
+    var isTop = i < 3;
+    var barCol = score >= 85 ? "#c8f542" : score >= 70 ? "#42f5c8" : "#7a7773";
+    var pctCol = score >= 85 ? "#c8f542" : score >= 70 ? "#42f5c8" : "#f0ede8";
+
+    var card = document.createElement("div");
+    card.className = "lc" + (isTop ? " t3" : "");
+
+    var rankDiv = document.createElement("div");
+    rankDiv.className = "lrank" + (i === 0 ? " g" : "");
+    rankDiv.textContent = i + 1;
+
+    var avDiv = document.createElement("div");
+    avDiv.className = "lav";
+    avDiv.style.background = db.co;
+    avDiv.style.color = db.tc;
+    avDiv.textContent = db.sl;
+
+    var bodyDiv = document.createElement("div");
+    bodyDiv.className = "lb";
+
+    var nameDiv = document.createElement("div");
+    nameDiv.className = "ln";
+    nameDiv.textContent = l.name;
+    if (i === 0) {
+      var badge = document.createElement("span");
+      badge.className = "bb";
+      badge.textContent = "mejor match";
+      nameDiv.appendChild(badge);
+    }
+
+    var metaDiv = document.createElement("div");
+    metaDiv.className = "lm";
+    metaDiv.textContent = db.su + " - " + db.loc;
+
+    var tagsDiv = document.createElement("div");
+    tagsDiv.className = "ltags";
+    (db.vi || "").split(", ").forEach(function(v) {
+      var tag = document.createElement("span");
+      tag.className = "ltag";
+      tag.textContent = v;
+      tagsDiv.appendChild(tag);
+    });
+
+    bodyDiv.appendChild(nameDiv);
+    bodyDiv.appendChild(metaDiv);
+    bodyDiv.appendChild(tagsDiv);
+
+    var matchDiv = document.createElement("div");
+    matchDiv.className = "ms";
+
+    var pctDiv = document.createElement("div");
+    pctDiv.className = "mp";
+    pctDiv.style.color = pctCol;
+    pctDiv.textContent = score + "%";
+
+    var barWrap = document.createElement("div");
+    barWrap.className = "mbw";
+    var barBg = document.createElement("div");
+    barBg.className = "mbb";
+    var barFill = document.createElement("div");
+    barFill.className = "mbf";
+    barFill.style.width = "0%";
+    barFill.style.background = barCol;
+    barFill.setAttribute("data-w", score + "%");
+    barBg.appendChild(barFill);
+    barWrap.appendChild(barBg);
+
+    var mlDiv = document.createElement("div");
+    mlDiv.className = "ml";
+    mlDiv.textContent = "compatibilidad";
+
+    matchDiv.appendChild(pctDiv);
+    matchDiv.appendChild(barWrap);
+    matchDiv.appendChild(mlDiv);
+
+    card.appendChild(rankDiv);
+    card.appendChild(avDiv);
+    card.appendChild(bodyDiv);
+    card.appendChild(matchDiv);
+
+    var whyDiv = document.createElement("div");
+    whyDiv.className = "why";
+    var reason = l.reason || "Compatible con el estilo del sello.";
+    var tips = l.tips || "Consulta el sitio del sello para instrucciones de envio.";
+    whyDiv.innerHTML = "<b>Por que encaja:</b> " + reason + "<br><br><b>Tip para el demo:</b> " + tips;
+    card.appendChild(whyDiv);
+
+    card.addEventListener("click", function() { whyDiv.classList.toggle("o"); });
+
+    cards.appendChild(card);
+
+    (function(fill, w) {
+      requestAnimationFrame(function() {
+        setTimeout(function() { fill.style.width = w; }, 50 + i * 60);
+      });
+    })(barFill, score + "%");
+  });
+
+  res.classList.add("v");
+  res.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+</script>
+</body>
+</html>
