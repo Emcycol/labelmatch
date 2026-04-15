@@ -118,6 +118,23 @@ footer{border-top:1px solid var(--b);margin-top:64px;padding:24px 0;text-align:c
   <div class="fi"><div class="fn" id="fn">-</div><div class="fm2" id="fm">-</div></div>
   <button class="rm" id="rm">x</button>
 </div>
+<div id="descform" style="display:none;background:var(--s);border:1px solid var(--b2);border-radius:12px;padding:16px 20px;margin-bottom:24px">
+  <div style="font-size:11px;color:var(--mu);margin-bottom:12px;letter-spacing:.05em">DESCRIBE TU TRACK (opcional pero mejora los resultados)</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:4px">BPM</div>
+      <input id="d-bpm" type="text" placeholder="ej: 128" style="width:100%;padding:8px 10px;background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--t);font-size:13px;font-family:var(--fm)">
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:4px">Key / Tonalidad</div>
+      <input id="d-key" type="text" placeholder="ej: Am, F#m" style="width:100%;padding:8px 10px;background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--t);font-size:13px;font-family:var(--fm)">
+    </div>
+  </div>
+  <div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:4px">Descripcion del sonido</div>
+    <input id="d-desc" type="text" placeholder="ej: dark, hipnotico, bajo prominente, sin vocal, atmosferico" style="width:100%;padding:8px 10px;background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--t);font-size:13px;font-family:var(--fm)">
+  </div>
+</div>
 <div class="grow" id="grow">
   <button class="gp act" data-g="all">Todos</button>
   <button class="gp" data-g="tech house">Tech House</button>
@@ -246,6 +263,7 @@ function loadFile(f) {
   fnEl.textContent = f.name;
   fmEl.textContent = (f.size/1024/1024).toFixed(1) + " MB";
   abtn.disabled = false;
+  document.getElementById("descform").style.display = "block";
   setTimeout(function() {
     document.querySelectorAll(".wb").forEach(function(b) { b.classList.add("p"); });
   }, 3000);
@@ -257,6 +275,7 @@ rm.addEventListener("click", function() {
   drop.style.display = "";
   fbar.style.display = "none";
   abtn.disabled = true;
+  document.getElementById("descform").style.display = "none";
   clearResults();
   document.querySelectorAll(".wb").forEach(function(b) { b.classList.remove("p"); });
 });
@@ -274,52 +293,50 @@ abtn.addEventListener("click", function() {
   clearResults();
   showLoading();
   errEl.classList.remove("v");
+  setStep("Leyendo audio...");
 
   var labelsPrompt = LABELS.map(function(l) {
-    return l.name + " (" + l.g + ", " + l.loc + "): " + l.su + ". Vibe: " + l.vi + ". BPM: " + l.b + ". Artistas: " + l.ar + ".";
+    return l.name + " (" + l.g + ", " + l.loc + "): " + l.su + ". Vibe: " + l.vi + ". BPM tipico: " + l.b + ". Artistas: " + l.ar + ".";
   }).join("\n");
 
-  var sysPrompt = "Eres un experto en A&R de musica electronica. Analiza el nombre del archivo de audio proporcionado y recomienda exactamente 10 sellos de la lista. Responde SOLO con JSON valido sin markdown ni backticks. Formato: {\"analysis\":{\"bpm\":\"rango\",\"key\":\"tonalidad\",\"genre\":\"genero\",\"subgenre\":\"subgenero\",\"mood\":\"mood 3-4 palabras\",\"energy\":\"low/mid/high\",\"characteristics\":[\"c1\",\"c2\",\"c3\",\"c4\"]},\"labels\":[{\"name\":\"nombre exacto del sello\",\"score\":85,\"reason\":\"por que encaja en 1-2 oraciones\",\"tips\":\"consejo para enviar el demo\"}]}. Score entre 60 y 98. Ordenar de mayor a menor score.";
+  var sysPrompt = "Eres un experto en A&R de musica electronica. Se te da el nombre del archivo de audio y datos opcionales del productor (BPM, key, descripcion). Analiza esta informacion y recomienda exactamente 10 sellos de la lista que mejor encajen. Responde SOLO con JSON valido sin markdown. Formato exacto: {\"analysis\":{\"bpm\":\"rango estimado\",\"key\":\"tonalidad\",\"genre\":\"genero\",\"subgenre\":\"subgenero\",\"mood\":\"mood en 3-4 palabras\",\"energy\":\"low/mid/high\",\"characteristics\":[\"c1\",\"c2\",\"c3\",\"c4\"]},\"labels\":[{\"name\":\"nombre exacto del sello\",\"score\":85,\"reason\":\"por que encaja en 1-2 oraciones\",\"tips\":\"consejo para enviar el demo\"}]}. Score entre 60 y 98. Ordenar mayor a menor.";
 
-  var userMsg = "Archivo: " + selFile.name + ". Recomienda 10 sellos de esta lista:\n\n" + labelsPrompt;
-
+  var bpm = document.getElementById("d-bpm").value;
+  var key = document.getElementById("d-key").value;
+  var desc = document.getElementById("d-desc").value;
+  var extra = "";
+  if (bpm) extra += " BPM: " + bpm + ".";
+  if (key) extra += " Key: " + key + ".";
+  if (desc) extra += " Descripcion: " + desc + ".";
+  var userMsg = "Archivo: " + selFile.name + "." + extra + " Recomienda 10 sellos:\n\n" + labelsPrompt;
   setStep("Analizando ADN musical...");
-
   fetch("/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
       system: sysPrompt,
       messages: [{ role: "user", content: userMsg }]
     })
   })
-  .then(function(r) {
-    if (!r.ok) {
-      return r.json().then(function(e) { throw new Error(e.error && e.error.message ? e.error.message : "HTTP " + r.status); });
-    }
-    return r.json();
-  })
-  .then(function(data) {
-    setStep("Procesando resultados...");
-    var raw = data.content.map(function(c) { return c.text || ""; }).join("");
-    var clean = raw.replace(/```json/g, "").replace(/```/g, "").trim();
-    var parsed;
-    try {
-      parsed = JSON.parse(clean);
-    } catch(e) {
-      throw new Error("No se pudo procesar la respuesta. Intenta de nuevo.");
-    }
-    lastRes = parsed;
-    hideLoading();
-    showAnalysis(parsed.analysis);
-    renderResults(parsed);
-  })
-  .catch(function(e) {
-    hideLoading();
-    showErr(e.message);
-  });
+    .then(function(r) {
+      if (!r.ok) {
+        return r.json().then(function(e) { throw new Error(e.error && e.error.message ? e.error.message : "HTTP " + r.status); });
+      }
+      return r.json();
+    })
+    .then(function(data) {
+      setStep("Procesando resultados...");
+      var raw = data.content.map(function(c) { return c.text || ""; }).join("");
+      var clean = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+      var parsed;
+      try { parsed = JSON.parse(clean); }
+      catch(e) { throw new Error("No se pudo procesar la respuesta. Intenta de nuevo."); }
+      lastRes = parsed;
+      hideLoading();
+      showAnalysis(parsed.analysis);
+      renderResults(parsed);
+    })
+    .catch(function(e) { hideLoading(); showErr(e.message); });
 });
 
 function showLoading() { ld.classList.add("v"); abtn.disabled = true; abtn.textContent = "ANALIZANDO..."; }
